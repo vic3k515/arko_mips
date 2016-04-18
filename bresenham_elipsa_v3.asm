@@ -123,14 +123,13 @@ po_zamianie:
 	lw   $t2, y0	   # y srodka
 
 	
-# Oblicz a^2, b^2, d = 4*b2 - 4*b*a2 +a2 i granice rysowania = x2 = a4 / (a2 + b2)
+# Oblicz a^2, b^2, d = 4*b2 - 4*b*a2 + a2 i granice rysowania = x2 = a4 / (a2 + b2)
 	multu $t3,$t3
 	mflo  $t5	   # $t5 = a^2
 	multu $t4,$t4
 	mflo  $t6	   # $t6 = b^2	
 	sll   $t7,$t6,2	   # $t7 = 4*b^2
-	move  $s3,$t5
-	mult  $s3,$t4
+	mult  $t5,$t4
 	mflo  $s3
 	sll   $s3,$s3,2    # $s3 = 4*b*a^2 -tmp
 	add   $t7,$t7,$t5
@@ -155,7 +154,7 @@ po_zamianie:
 	
 	# wolne: t9,$s3
 
-# Na potrzeby algorytmu ustaw tymczasowe wspolrzedne pierwszego piksela na (0,dl_polosi_pionowej)
+# Na potrzeby algorytmu ustaw tymczasowe wspolrzedne pierwszego piksela na (1,dl_polosi_pionowej)
 	li    $t1,1	   # x
 	move  $t2,$t4	   # y
 
@@ -176,7 +175,7 @@ loop:
 	sub   $t2,$t2,1    # y = y-1
 	
 	sub   $t8,$t8,$s1  #
-	addiu $t8,$t8,1	   # ustaw adres pixela na kolejny bajt, ale w poprzednim rzedzie
+	addiu $t8,$t8,1	   # ustaw wskaznik pisania na kolejny bajt, ale w poprzednim rzedzie
 	
 	mult  $t6,$t1
 	mflo  $t9
@@ -192,7 +191,7 @@ loop:
 # RUCH w kier E: Zwieksz x o 1 i zaaktualizuj zmienna decyzyjna d = d + 2*b2*x + b2, gdzie x to poprzednie x zwiekszone o 1
 wybierz_E:
 	addiu $t1,$t1,1    # x = x+1
-	addiu $t8,$t8,1    # ustaw adres pixela na kolejny bajt
+	addiu $t8,$t8,1    # ustaw wskaznik pisania na kolejny bajt
 
 	mult  $t6,$t1
 	mflo  $t9
@@ -204,7 +203,6 @@ wybierz_E:
 #######################	
 rysuj_4_piksele:
 	sw    $ra,-4($sp)  # zachowaj adres powrotu na stosie
-	#move  $s3,$t8     # zapamietaj wskaznik zanim zostanie przesuniety
 	bgtz  $a2,nie_zamieniaj # jesli pierwsze rysowanie to nic nie zmieniaj
 				# w drugim rysowaniu zamien osie OX i OY			
 	move  $a0,$t2
@@ -233,8 +231,8 @@ nie_zamieniaj:
 	sll   $t9,$t1,3
 	sub   $t9,$t9,$t1
 	sub   $t9,$t9,$t1
-	subiu $t9,$t9,1
-	move  $a3,$t9      # w a3 zapamietaj roznice x miedzy pikselem w I i II cwiartce
+	subiu $t9,$t9,1	   # odjecie piksela lezacego na prostej x=0
+	move  $a3,$t9      # w a3 zapamietaj roznice |x1-x2| miedzy pikselem w I i II cwiartce
 	sub   $t8,$t8,$t9
 	jal   rysuj_pixel
 	
@@ -249,10 +247,10 @@ nie_zamieniaj:
 	
 	# rysuj piksel w IV cwiartce ukladu 
 	add   $t8,$t8,$a3
-	subi  $t8,$t8,4
+	subi  $t8,$t8,4    # powrot na 1 bajt piksela
 	jal   rysuj_pixel
 
-	move  $t8,$s3      # wczytaj z powrotem wskazik z I cwiartki
+	move  $t8,$s3      # wczytaj z powrotem wskaznik pisania z I cwiartki
 	
 	bgtz  $a2,powrot
 	move  $a0,$t2	   #
