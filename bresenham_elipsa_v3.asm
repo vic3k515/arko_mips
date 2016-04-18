@@ -15,8 +15,8 @@ r_b:		.word   80
 R:		.byte   0
 G:		.byte   0
 B:		.byte   0
-obraz: 		.asciiz "/home/franek/projekty/arko/biale_tlo2.bmp"
-obraz2:		.asciiz "/home/franek/projekty/arko/123aaa.bmp"
+obraz: 		.asciiz "/home/franek/projekty/arko/mips_elipsa/biale_tlo2.bmp"
+obraz2:		.asciiz "/home/franek/projekty/arko/mips_elipsa/out.bmp"
 text1:		.asciiz "Wczytuje obraz BMP\n"
 text2:		.asciiz "Program zakancza dzialanie"
 blad_wczyt:	.asciiz "Blad wczytania pliku. Program zakancza dzialanie\n"
@@ -156,7 +156,7 @@ po_zamianie:
 	# wolne: t9,$s3
 
 # Na potrzeby algorytmu ustaw tymczasowe wspolrzedne pierwszego piksela na (0,dl_polosi_pionowej)
-	li    $t1,0	   # x
+	li    $t1,1	   # x
 	move  $t2,$t4	   # y
 
 loop:	
@@ -218,6 +218,7 @@ rysuj_4_piksele:
 	mflo  $t8
 	lw    $a0,x0
 	add   $a0,$a0,$t1
+	subiu $a0,$a0,1
 	add   $t8,$t8,$a0
 	add   $t8,$t8,$a0
 	add   $t8,$t8,$a0
@@ -232,13 +233,14 @@ nie_zamieniaj:
 	sll   $t9,$t1,3
 	sub   $t9,$t9,$t1
 	sub   $t9,$t9,$t1
-	addiu $t9,$t9,2
+	subiu $t9,$t9,1
 	move  $a3,$t9      # w a3 zapamietaj roznice x miedzy pikselem w I i II cwiartce
 	sub   $t8,$t8,$t9
 	jal   rysuj_pixel
 	
 	# rysuj piksel w III cwiartce ukladu wspolrzednych
 	sll   $t9,$t2,1
+	subiu $t9,$t9,1
 	mult  $t9,$s1
 	mflo  $t9	   
 	sub   $t8,$t8,$t9
@@ -251,6 +253,7 @@ nie_zamieniaj:
 	jal   rysuj_pixel
 
 	move  $t8,$s3      # wczytaj z powrotem wskazik z I cwiartki
+	
 	bgtz  $a2,powrot
 	move  $a0,$t2	   #
 	move  $t2,$t1	   #
