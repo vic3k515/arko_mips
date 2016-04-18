@@ -1,16 +1,24 @@
-# Program rysujacy na obrazie BMP (24bpp) elipse o zadanych: wspolrzednych srodka i dlugosciach polosi wykorzystujacy algorytm Bresenhama
+# Program rysujacy algorytmem Bresenhama na obrazie BMP (24bpp) elipse o zadanych: wspolrzednych srodka i dlugosciach polosi
 # @autor: Wiktor Franus
 # 	  grupa: 4I1
 # 	  Warsaw University of Technology
 #
-# $t0 -
-# $t1 -
-# $t2 -
+# $t0 -	adres poczatku tablicy pikseli		#s0 - rozmiar pliku
+# $t1 -	wspolrzedna x				#s1 - rozmiar wiersza w bajtach
+# $t2 -	wspolrzedna y				#s2 - granica rysowania - punkt w ktorym nachylenie stycznej do elipsy przekracza -1
+# $t3 - dlugosc polosi a			#s3 - zmienna pomocnicza
+# $t4 - dlugosc polosi b			#s4 - skladowa koloru piksela B
+# $t5 - a^2					#s5 - skladowa koloru piksela G
+# $t6 - b^2					#s6 - skladowa koloru piksela R
+# $t7 - zmienna decyzyjna d			#s7 - adres pliku na stercie
+# $t8 - wskaznik pisania			#a1 - flaga informujaca czy juz osiagnieto raz granice rysowania (rozroznia rysowanie 1 i 2)
+# $t9 - zmienna pomocnicza
+
 		.data
 x0:		.word	100
 y0:		.word	100
 r_a:		.word   10
-r_b:		.word   5
+r_b:		.word   3
 #################
 R:		.byte   0
 G:		.byte   0
@@ -144,7 +152,6 @@ po_zamianie:
 	add   $s2,$t5,$t6
 	div   $s2,$s3,$s2  # $s2 = limit
 
-	
 	# wolne: $t8,t9,$s3
 	
 # Ustaw wskaźnik pisania na punkt (x0,y0+dl_polosi_pionowej), czyli 'czubek elipsy'
@@ -165,12 +172,12 @@ po_zamianie:
 	move  $t2,$t4	   # y
 
 loop:		
-jal   rysuj_4_piksele
+	jal   rysuj_4_piksele
+	
 	# sprawdz czy osiagnieto granice rysowania,tj. czy x2 >= limit
 	mult  $t1,$t1
 	mflo  $t9
 	bge   $t9,$s2,zamien_polosie
-	
 	
  	# sprawdz wartosc zmiennej decyzyjnej
 	bltz  $t7,wybierz_E
@@ -178,16 +185,6 @@ jal   rysuj_4_piksele
 # RUCH w kier SE: Zwieksz x o 1, y zmniejsz o 1 i zaaktualizuj zmienna decyzyjna d = d + 8*b2*x + 12*b2 - 8*a2*y + 8*a2, 
 # gdzie x to poprzednie x zwiekszone o 1, a y to poprzednie y zmniejszone o 1
 
-	
-#	mult  $t6,$t1
-#	mflo  $t9
-#	sll   $t9,$t9,1
-#	add   $t9,$t9,$t6
-#	add   $t7,$t7,$t9
-#	mult  $t5,$t2
-#	mflo  $t9
-#	sll   $t9,$t9,1
-#	sub   $t7,$t7,$t9
 	mult  $t6,$t1
 	mflo  $t9
 	sll   $t9,$t9,3
@@ -214,12 +211,6 @@ jal   rysuj_4_piksele
 # RUCH w kier E: Zwieksz x o 1 i zaaktualizuj zmienna decyzyjna d = d + 8*b2*x + 12*b2, gdzie x to poprzednie x zwiekszone o 1
 wybierz_E:
 
-
-#	mult  $t6,$t1
-#	mflo  $t9
-#	sll   $t9,$t9,1
-#	add   $t9,$t9,$t6
-#	add   $t7,$t7,$t9
 	mult  $t6,$t1
 	mflo  $t9
 	sll   $t9,$t9,3
@@ -229,7 +220,7 @@ wybierz_E:
 	add   $t7,$t7,$t9
 	add   $t7,$t7,$t9
 	
-		addiu $t1,$t1,1    # x = x+1
+	addiu $t1,$t1,1    # x = x+1
 	addiu $t8,$t8,1    # ustaw wskaznik pisania na kolejny bajt
 	
 	j     loop
