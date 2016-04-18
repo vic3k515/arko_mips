@@ -9,8 +9,8 @@
 		.data
 x0:		.word	100
 y0:		.word	100
-r_a:		.word   80
-r_b:		.word   40
+r_a:		.word   10
+r_b:		.word   5
 #################
 R:		.byte   0
 G:		.byte   0
@@ -21,6 +21,7 @@ text1:		.asciiz "Wczytuje obraz BMP\n"
 text2:		.asciiz "Program zakancza dzialanie"
 blad_wczyt:	.asciiz "Blad wczytania pliku. Program zakancza dzialanie\n"
 blad_dlugosc:   .asciiz "Blad: Conajmniej jedna z polosi musi miec dlugosc wieksza od zera\n"
+newline:	.asciiz "\n"
 		.align  2
 header:		.space  36
 
@@ -142,6 +143,7 @@ po_zamianie:
 	mflo  $s3
 	add   $s2,$t5,$t6
 	div   $s2,$s3,$s2  # $s2 = limit
+
 	
 	# wolne: $t8,t9,$s3
 	
@@ -162,25 +164,20 @@ po_zamianie:
 	li    $t1,1	   # x
 	move  $t2,$t4	   # y
 
-loop:	
-	
-	
+loop:		
+jal   rysuj_4_piksele
 	# sprawdz czy osiagnieto granice rysowania,tj. czy x2 >= limit
 	mult  $t1,$t1
 	mflo  $t9
 	bge   $t9,$s2,zamien_polosie
 	
-	jal   rysuj_4_piksele
+	
  	# sprawdz wartosc zmiennej decyzyjnej
 	bltz  $t7,wybierz_E
 	
 # RUCH w kier SE: Zwieksz x o 1, y zmniejsz o 1 i zaaktualizuj zmienna decyzyjna d = d + 8*b2*x + 12*b2 - 8*a2*y + 8*a2, 
 # gdzie x to poprzednie x zwiekszone o 1, a y to poprzednie y zmniejszone o 1
-	addiu $t1,$t1,1    # x = x+1
-	sub   $t2,$t2,1    # y = y-1
-	
-	sub   $t8,$t8,$s1  #
-	addiu $t8,$t8,1	   # ustaw wskaznik pisania na kolejny bajt, ale w poprzednim rzedzie
+
 	
 #	mult  $t6,$t1
 #	mflo  $t9
@@ -205,12 +202,18 @@ loop:
 	mflo  $t9
 	sll   $t9,$t9,3
 	sub   $t7,$t7,$t9
+	
+	addiu $t1,$t1,1    # x = x+1
+	sub   $t2,$t2,1    # y = y-1
+	
+	sub   $t8,$t8,$s1  #
+	addiu $t8,$t8,1	   # ustaw wskaznik pisania na kolejny bajt, ale w poprzednim rzedzie
+	
 	j     loop
 	
 # RUCH w kier E: Zwieksz x o 1 i zaaktualizuj zmienna decyzyjna d = d + 8*b2*x + 12*b2, gdzie x to poprzednie x zwiekszone o 1
 wybierz_E:
-	addiu $t1,$t1,1    # x = x+1
-	addiu $t8,$t8,1    # ustaw wskaznik pisania na kolejny bajt
+
 
 #	mult  $t6,$t1
 #	mflo  $t9
@@ -225,6 +228,10 @@ wybierz_E:
 	add   $t7,$t7,$t9
 	add   $t7,$t7,$t9
 	add   $t7,$t7,$t9
+	
+		addiu $t1,$t1,1    # x = x+1
+	addiu $t8,$t8,1    # ustaw wskaznik pisania na kolejny bajt
+	
 	j     loop
 
 #######################	
@@ -236,7 +243,7 @@ rysuj_4_piksele:
 	move  $t2,$t1
 	move  $t1,$a0	   # zamiana wspolrzednych x i y
 	
-	# wskazik = adres_pocz_buf + (y0+y)*szer_wiersza_w_bajtach + 3*(x0+x)	
+	# wskazik = adres_pocz_buf + (y0+y)*szer_wiersza_w_bajtach + 3*(x0+x-1)	
 	lw    $a0,y0
 	add   $t8,$t2,$a0
 	mult  $s1,$t8
